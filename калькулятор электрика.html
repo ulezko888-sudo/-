@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расчет кабеля и ТКЗ по ГОСТ — Инструмент Электрика</title>
+    <!-- Подключение Tailwind CSS для современного адаптивного дизайна -->
+    <script src="https://jsdelivr.net"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900 min-h-screen pb-12">
+
+    <!-- Хедер -->
+    <header class="bg-slate-800 text-white shadow-md p-4 mb-6">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold tracking-tight">ЭлектроЩит-Эксперт</h1>
+                <p class="text-xs text-slate-400">Автономный расчет кабеля, падения напряжения и ТКЗ по ГОСТ</p>
+            </div>
+            <span class="bg-green-500 text-slate-900 text-xs font-bold px-2.5 py-1 rounded-full uppercase">Спец-режим (Стройка)</span>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- БЛОК ВВОДА ДАННЫХ -->
+        <section class="bg-white rounded-xl shadow p-5 space-y-4">
+            <h2 class="text-lg font-bold border-b pb-2 text-slate-700 flex items-center gap-2">
+                <span>📝</span> Параметры линии
+            </h2>
+
+            <!-- Материал и Напряжение -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Материал жилы</label>
+                    <select id="material" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="copper">Медь (Cu)</option>
+                        <option value="aluminum">Алюминий (Al)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Напряжение сети</label>
+                    <select id="voltage" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="220">220 В (1 фаза)</option>
+                        <option value="380">380 В (3 фазы)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Мощность или Ток -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Мощность нагрузки, кВт</label>
+                    <input type="number" id="power" value="5.5" step="0.1" min="0.1" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Или расчетный ток, А</label>
+                    <input type="number" id="current" value="25" step="1" min="1" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+            </div>
+
+            <!-- Длина линии -->
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Длина кабельной линии, метров</label>
+                <input type="number" id="length" value="45" min="1" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+
+            <!-- Способ прокладки -->
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Способ прокладки кабеля</label>
+                <select id="installation" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="open">Открыто (по воздуху / лоткам)</option>
+                    <option value="pipe">В трубе / кабель-канале</option>
+                    <option value="ground">В земле (в траншее)</option>
+                    <option value="bunch">Пучком / в связке (совместно)</option>
+                </select>
+                <p id="coeff-info" class="text-xs text-blue-600 mt-1 font-medium">Поправочный коэффициент: K = 1.00</p>
+            </div>
+        </section>
+
+        <!-- БЛОК РЕЗУЛЬТАТОВ РАСЧЕТА -->
+        <section class="space-y-6">
+            
+            <!-- Главный вердикт -->
+            <div class="bg-slate-800 text-white rounded-xl shadow p-5 text-center">
+                <p class="text-xs uppercase tracking-widest text-slate-400 font-semibold mb-1">Рекомендуемое сечение кабеля</p>
+                <div class="text-4xl font-extrabold text-green-400 my-1"><span id="res-section">2.5</span> мм²</div>
+                <p class="text-sm text-slate-300" id="res-cable-type">Кабель: ВВГнг-LS 3х2.5</p>
+            </div>
+
+            <!-- Детали расчетов -->
+            <div class="bg-white rounded-xl shadow p-5 space-y-4">
+                <h3 class="text-base font-bold text-slate-700 border-b pb-1.5">📊 Технические показатели</h3>
+                
+                <div class="grid grid-cols-2 gap-y-3 text-sm">
+                    <span class="text-gray-500">Ток нагрузки:</span>
+                    <span class="font-bold text-right" id="det-current">25.0 А</span>
+
+                    <span class="text-gray-500">Допуст. ток по ГОСТ (Iдоп):</span>
+                    <span class="font-bold text-right text-blue-600" id="det-idop">27.0 А</span>
+
+                    <span class="text-gray-500">Падение напряжения:</span>
+                    <span class="font-bold text-right" id="det-drop">3.4% (7.5 В)</span>
+
+                    <span class="text-gray-500">Ток КЗ (петля Ф-0):</span>
+                    <span class="font-bold text-right text-amber-600" id="det-tkz">340 А</span>
+                </div>
+
+                <!-- Статус падения напряжения -->
+                <div id="drop-warning" class="hidden p-2.5 rounded-lg text-xs font-semibold"></div>
+            </div>
+
+            <!-- Рекомендация по автоматическому выключателю -->
+            <div class="bg-white rounded-xl shadow p-5 border-l-4 border-blue-500">
+                <h3 class="text-base font-bold text-slate-700 mb-2">🛡 Защитный автомат</h3>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-xs uppercase tracking-wider text-gray-400 block">Рекомендуемый номинал</span>
+                        <div class="text-3xl font-black text-slate-800" id="res-breaker">C25</div>
+                    </div>
+                    <div class="text-right max-w-[60%]">
+                        <p class="text-xs text-gray-500 leading-tight" id="breaker-reason">Обеспечивает надежную защиту кабеля от перегрузки и мгновенно сработает при КЗ.</p>
+                    </div>
+                </div>
+                <div id="breaker-warning" class="hidden mt-3 p-2.5 bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs"></div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Скрипты расчетов -->
+    <script>
+        // Базовые ряды сечений кабелей по ГОСТ / ПУЭ
+        const SECTIONS = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70];
+        
+        // Таблицы допустимых токов Iдоп (трехжильный для 220В / четырехжильный для 380В, открытая прокладка базовое значение)
+        // Упрощенная, но приближенная к ГОСТ 31996-2012 модель для строек
+        const IDOP_TABLE = {
+            copper:   [19,  27,  36,  46,  63,  85,  115, 140, 175, 215],
+            aluminum: [15,  21,  28,  36,  49,  66,  89,  109, 136, 167]
+        };
+
+        // Удельное сопротивление материалов (Ом * мм² / м) при рабочей температуре
+        const RESISTIVITY = { copper: 0.0178, aluminum: 0.028 };
+
+        // Стандартный ряд номиналов автоматических выключателей
+        const BREAKER_NOMINALS = [6, 10, 16, 25, 32, 40, 50, 63, 80, 100];
+
+        // Элементы UI
+        const elMaterial = document.getElementById('material');
+        const elVoltage = document.getElementById('voltage');
+        const elPower = document.getElementById('power');
+        const elCurrent = document.getElementById('current');
+        const elLength = document.getElementById('length');
+        const elInstallation = document.getElementById('installation');
+        
+        const elCoeffInfo = document.getElementById('coeff-info');
+        const elResSection = document.getElementById('res-section');
+        const elResCableType = document.getElementById('res-cable-type');
+        const elDetCurrent = document.getElementById('det-current');
+        const elDetIdop = document.getElementById('det-idop');
+        const elDetDrop = document.getElementById('det-drop');
+        const elDetTkz = document.getElementById('det-tkz');
+        const elDropWarning = document.getElementById('drop-warning');
+        const elResBreaker = document.getElementById('res-breaker');
+        const elBreakerReason = document.getElementById('breaker-reason');
+        const elBreakerWarning = document.getElementById('breaker-warning');
+
+        // Флаги блокировки зацикливания при вводе КВт / Амперы
+        let isUpdatingUnits = false;
+
+        function updateCurrentFromPower() {
+            if (isUpdatingUnits) return;
+            isUpdatingUnits = true;
+            const p = parseFloat(elPower.value) || 0;
+            const u = parseFloat(elVoltage.value);
+            let i = 0;
+            if (u === 220) {
+                i = (p * 1000) / (u * 0.92); // cos phi принят за 0.92 для строек
+            } else {
+                i = (p * 1000) / (Math.sqrt(3) * u * 0.92);
+            }
